@@ -4,8 +4,10 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 from forms.users_form import RegisterForm, LoginForm
 from forms.news_form import NewsForm
+from forms.comment_form import CommentForm
 from data.news_class import News
 from data.users_class import User
+from data.comment_class import Comment
 from data import db_session
 
 app = Flask(__name__)
@@ -33,7 +35,8 @@ def index():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("index.html", news=news)
+    comments = db_sess.query(Comment)
+    return render_template("index.html", news=news, comments=comments)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -98,6 +101,23 @@ def add_news():
         db_sess.commit()
         return redirect('/')
     return render_template('news.html', title='Добавление новости', 
+                           form=form)
+
+
+@app.route('/comment/<int:id>',  methods=['GET', 'POST'])
+@login_required
+def add_comment(id):
+    form = CommentForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        comment = Comment()
+        comment.content = form.content.data
+        comment.user = current_user.name
+        comment.new_id = id
+        db_sess.add(comment)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('comment.html', title='Добавление комментария',
                            form=form)
 
 
