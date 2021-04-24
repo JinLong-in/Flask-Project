@@ -10,6 +10,8 @@ from data.users_class import User
 from data.comment_class import Comment
 from data import db_session
 
+from datetime import datetime
+
 app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -32,11 +34,12 @@ def index():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
+            (News.user == current_user) | (News.is_private != True)).order_by(-News.id)
     else:
-        news = db_sess.query(News).filter(News.is_private != True)
+        news = db_sess.query(News).filter(News.is_private != True).order_by(-News.id)
     comments = db_sess.query(Comment)
-    return render_template("index.html", news=news, comments=comments)
+    time_now = datetime.now().hour * 60 + datetime.now().minute
+    return render_template("index.html", title="Blog", news=news, comments=comments, time=time_now, datetime=datetime)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -44,7 +47,7 @@ def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
-            return render_template('register.html', title='Регистрация',
+            return render_template('register.html', title='Register',
                                    form=form,
                                    message="Пароли не совпадают")
         db_sess = db_session.create_session()
@@ -61,7 +64,7 @@ def reqister():
         db_sess.add(user)
         db_sess.commit()
         return redirect('/login')
-    return render_template('register.html', title='Регистрация', form=form)
+    return render_template('register.html', title='Register', form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -76,7 +79,20 @@ def login():
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form)
-    return render_template('login.html', title='Авторизация', form=form)
+    return render_template('login.html', title='Authorization', form=form)
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html', title="Profile")
+
+
+@app.route('/edition')
+@login_required
+def edition():
+    pass
+    return
 
 
 @app.route('/logout')
@@ -100,7 +116,7 @@ def add_news():
         db_sess.merge(current_user)
         db_sess.commit()
         return redirect('/')
-    return render_template('news.html', title='Добавление новости', 
+    return render_template('news.html', title='Adding news',
                            form=form)
 
 
@@ -117,7 +133,7 @@ def add_comment(id):
         db_sess.add(comment)
         db_sess.commit()
         return redirect('/')
-    return render_template('comment.html', title='Добавление комментария',
+    return render_template('comment.html', title='Adding comments',
                            form=form)
 
 
@@ -150,7 +166,7 @@ def edit_news(id):
         else:
             abort(404)
     return render_template('news.html',
-                           title='Редактирование новости',
+                           title='Editing news',
                            form=form
                            )
 
