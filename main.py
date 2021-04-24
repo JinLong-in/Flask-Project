@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, request, abort
 from flask_login import LoginManager
 from flask_login import login_user, logout_user, login_required, current_user
 
-from forms.users_form import RegisterForm, LoginForm
+from forms.users_form import RegisterForm, LoginForm, RefactorForm
 from forms.news_form import NewsForm
 from forms.comment_form import CommentForm
 from data.news_class import News
@@ -91,8 +91,25 @@ def profile():
 @app.route('/edition')
 @login_required
 def edition():
-    pass
-    return
+    form = RefactorForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        if user:
+            form.name.data = user.name
+            form.about.data = user.about
+        else:
+            abort(404)
+
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        user.name = form.name.data
+        user.about = form.about.data
+        db_sess.commit()
+        return redirect('/profile')
+
+    return render_template('edition.html', title='Refactoring', form=form)
 
 
 @app.route('/logout')
