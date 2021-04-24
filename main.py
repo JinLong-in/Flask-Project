@@ -88,7 +88,7 @@ def profile():
     return render_template('profile.html', title="Profile")
 
 
-@app.route('/edition')
+@app.route('/edition', methods=['GET', 'POST'])
 @login_required
 def edition():
     form = RefactorForm()
