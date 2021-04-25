@@ -11,6 +11,7 @@ from data.comment_class import Comment
 from data import db_session
 
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -20,7 +21,8 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 def main():
     db_session.global_init("db/blogs.db")
-    app.run(port=5000, host="127.0.0.1")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
 
 
 @login_manager.user_loader
