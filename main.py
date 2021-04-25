@@ -195,6 +195,7 @@ def news_delete(id):
     news = db_sess.query(News).filter(News.id == id,
                                       News.user == current_user
                                       ).first()
+    db_sess.query(Comment).filter(Comment.new_id == id).delete()
     if news:
         db_sess.delete(news)
         db_sess.commit()
